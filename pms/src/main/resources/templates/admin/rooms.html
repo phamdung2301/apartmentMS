@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý phòng trọ | Mini-PMS Admin</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts & Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/index.css}">
+</head>
+<body>
+
+    <!-- Sidebar Layout -->
+    <div class="sidebar">
+        <div>
+            <div class="sidebar-logo">
+                <div class="logo-icon">M</div>
+                <div class="logo-text">
+                    <h5>Mini-PMS</h5>
+                    <span>Admin Panel</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-nav">
+                <a th:href="@{/admin/dashboard}" class="nav-item">
+                    <i class="bi bi-grid-fill"></i> Dashboard
+                </a>
+                <a th:href="@{/admin/rooms}" class="nav-item active">
+                    <i class="bi bi-house-door"></i> Room Management
+                </a>
+                <a th:href="@{/admin/contracts}" class="nav-item">
+                    <i class="bi bi-file-earmark-text"></i> Invoice Generation
+                </a>
+                <a th:href="@{/admin/issues}" class="nav-item">
+                    <i class="bi bi-exclamation-circle"></i> Issue Reports
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="bi bi-gear"></i> Settings
+                </a>
+            </div>
+        </div>
+        
+        <div class="sidebar-footer">
+            <div class="help-box mb-3">
+                <p class="m-0 text-secondary">Need Help?</p>
+                <p class="mb-3" style="font-size: 11px;">Contact our tech support team.</p>
+                <a href="mailto:support@minipms.com" class="btn btn-pms w-100 btn-sm py-2">Contact Support</a>
+            </div>
+            <form th:action="@{/logout}" method="POST" id="logoutForm" class="d-none"></form>
+            <a href="javascript:document.getElementById('logoutForm').submit();" class="nav-item text-danger border-top pt-3 rounded-0">
+                <i class="bi bi-box-arrow-left"></i> Đăng xuất
+            </a>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="app-header">
+        <form th:action="@{/admin/contracts}" method="GET" class="search-bar">
+            <i class="bi bi-search"></i>
+            <input type="text" name="search" th:value="${searchQuery}" placeholder="Tìm kiếm khách thuê...">
+        </form>
+        
+        <div class="header-actions">
+            <div class="notification-bell">
+                <i class="bi bi-bell"></i>
+                <div class="notification-badge"></div>
+            </div>
+            
+            <div class="user-profile">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Avatar" class="user-avatar">
+                <div class="user-info">
+                    <h6>Admin User</h6>
+                    <span>Manager</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="fw-bold m-0" style="font-size: 28px;">Quản lý Phòng Trọ</h1>
+                <p class="text-secondary m-0">Thêm, sửa, xóa phòng trọ và cấu hình giá thuê</p>
+            </div>
+            
+            <button class="btn btn-pms" data-bs-toggle="modal" data-bs-target="#addRoomModal">
+                <i class="bi bi-plus-circle"></i> Thêm phòng mới
+            </button>
+        </div>
+
+        <!-- Rooms List Card -->
+        <div class="content-card">
+            <div class="card-title-area">
+                <h4>Danh Sách Phòng Trọ</h4>
+                <p>Tổng quan hiện trạng vật chất và giá cả của khu trọ</p>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="pms-table">
+                    <thead>
+                        <tr>
+                            <th>Room Number</th>
+                            <th>Giá Thuê Hàng Tháng</th>
+                            <th class="text-center">Trạng Thái</th>
+                            <th>Mô Tả Vật Chất</th>
+                            <th class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="room : ${rooms}">
+                            <td class="fw-bold" th:text="${room.roomNumber}">101</td>
+                            <td class="fw-semibold text-dark" th:text="${#numbers.formatDecimal(room.price, 0, 'COMMA', 0, 'POINT')} + ' VND'">3.500.000 VND</td>
+                            <td class="text-center">
+                                <span th:if="${room.status == 'EMPTY'}" class="badge-draft">Trống</span>
+                                <span th:if="${room.status == 'RENTED'}" class="badge-paid">Đang Thuê</span>
+                            </td>
+                            <td th:text="${room.description}">Phòng lầu 1 thoáng mát</td>
+                            <td class="text-center">
+                                <a th:href="@{/admin/rooms/delete/{id}(id=${room.id})}" 
+                                   class="btn btn-pms-outline text-danger btn-pms-sm py-1 px-2.5" 
+                                   onclick="return confirm('Bạn có chắc chắn muốn xóa phòng này?');">
+                                    <i class="bi bi-trash"></i> Xóa
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Room Modal -->
+    <div class="modal fade" id="addRoomModal" tabindex="-1" aria-labelledby="addRoomModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; overflow: hidden;">
+                <form th:action="@{/admin/rooms/save}" method="POST" th:object="${newRoom}">
+                    <div class="modal-header border-0 bg-light p-4">
+                        <h5 class="modal-title fw-bold" id="addRoomModalLabel">Thêm Phòng Trọ Mới</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label for="roomNumber" class="form-label fw-semibold">Số phòng <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control bg-light" id="roomNumber" name="roomNumber" required placeholder="Ví dụ: P106">
+                        </div>
+                        <div class="mb-3">
+                            <label for="price" class="form-label fw-semibold">Giá thuê hàng tháng (VND) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control bg-light" id="price" name="price" required placeholder="Ví dụ: 3500000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label fw-semibold">Mô tả hiện trạng</label>
+                            <textarea class="form-control bg-light" id="description" name="description" rows="3" placeholder="Nhập mô tả vật chất, trang thiết bị đi kèm..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4">
+                        <button type="button" class="btn btn-pms-outline" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-pms">Lưu lại</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

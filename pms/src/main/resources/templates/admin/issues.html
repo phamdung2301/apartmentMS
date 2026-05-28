@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo sự cố | Mini-PMS Admin</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts & Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/index.css}">
+</head>
+<body>
+
+    <!-- Sidebar Layout -->
+    <div class="sidebar">
+        <div>
+            <div class="sidebar-logo">
+                <div class="logo-icon">M</div>
+                <div class="logo-text">
+                    <h5>Mini-PMS</h5>
+                    <span>Admin Panel</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-nav">
+                <a th:href="@{/admin/dashboard}" class="nav-item">
+                    <i class="bi bi-grid-fill"></i> Dashboard
+                </a>
+                <a th:href="@{/admin/rooms}" class="nav-item">
+                    <i class="bi bi-house-door"></i> Room Management
+                </a>
+                <a th:href="@{/admin/contracts}" class="nav-item">
+                    <i class="bi bi-file-earmark-text"></i> Invoice Generation
+                </a>
+                <a th:href="@{/admin/issues}" class="nav-item active">
+                    <i class="bi bi-exclamation-circle"></i> Issue Reports
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="bi bi-gear"></i> Settings
+                </a>
+            </div>
+        </div>
+        
+        <div class="sidebar-footer">
+            <div class="help-box mb-3">
+                <p class="m-0 text-secondary">Need Help?</p>
+                <p class="mb-3" style="font-size: 11px;">Contact our tech support team.</p>
+                <a href="mailto:support@minipms.com" class="btn btn-pms w-100 btn-sm py-2">Contact Support</a>
+            </div>
+            <form th:action="@{/logout}" method="POST" id="logoutForm" class="d-none"></form>
+            <a href="javascript:document.getElementById('logoutForm').submit();" class="nav-item text-danger border-top pt-3 rounded-0">
+                <i class="bi bi-box-arrow-left"></i> Đăng xuất
+            </a>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="app-header">
+        <form th:action="@{/admin/contracts}" method="GET" class="search-bar">
+            <i class="bi bi-search"></i>
+            <input type="text" name="search" th:value="${searchQuery}" placeholder="Tìm kiếm khách thuê...">
+        </form>
+        
+        <div class="header-actions">
+            <div class="notification-bell">
+                <i class="bi bi-bell"></i>
+                <div class="notification-badge"></div>
+            </div>
+            
+            <div class="user-profile">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Avatar" class="user-avatar">
+                <div class="user-info">
+                    <h6>Admin User</h6>
+                    <span>Manager</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="mb-4">
+            <h1 class="fw-bold m-0" style="font-size: 28px;">Báo Cáo Sự Cố & Hỗ Trợ</h1>
+            <p class="text-secondary m-0">Tiếp nhận thông tin hỏng hóc, sửa chữa trang thiết bị của khách thuê</p>
+        </div>
+
+        <!-- Issues List Card -->
+        <div class="content-card">
+            <div class="card-title-area">
+                <h4>Phiếu Báo Cáo Hỗ Trợ Kỹ Thuật</h4>
+                <p>Danh sách các báo cáo sự cố được gửi trực tiếp từ tài khoản khách thuê</p>
+            </div>
+            
+            <div th:if="${issues.empty}" class="text-center py-5">
+                <i class="bi bi-chat-left-heart text-secondary" style="font-size: 40px;"></i>
+                <h5 class="fw-bold mt-3">Không có báo cáo sự cố nào!</h5>
+                <p class="text-secondary" style="font-size: 14px;">Mọi thiết bị tại các phòng đang vận hành tốt.</p>
+            </div>
+
+            <div th:if="${!issues.empty}" class="table-responsive">
+                <table class="pms-table">
+                    <thead>
+                        <tr>
+                            <th>Thời Gian</th>
+                            <th>Phòng</th>
+                            <th>Người Gửi</th>
+                            <th>Mô Tả Sự Cố</th>
+                            <th class="text-center">Trạng Thái</th>
+                            <th class="text-center" style="width: 220px;">Cập nhật tiến độ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="issue : ${issues}">
+                            <td class="font-monospace text-secondary" style="font-size: 13px;" th:text="${#temporals.format(issue.createdAt, 'yyyy-MM-dd HH:mm')}">2026-05-27 15:30</td>
+                            <td class="fw-bold" th:text="${issue.room.roomNumber}">101</td>
+                            <td class="fw-semibold" th:text="${issue.tenant.fullName}">Nguyễn Văn A</td>
+                            <td th:text="${issue.description}">Hỏng vòi nước toilet bị rỉ...</td>
+                            <td class="text-center">
+                                <span th:if="${issue.status == 'PENDING'}" class="badge-unpaid">Chờ xử lý</span>
+                                <span th:if="${issue.status == 'PROCESSING'}" class="badge-draft text-warning bg-warning-subtle">Đang sửa</span>
+                                <span th:if="${issue.status == 'RESOLVED'}" class="badge-paid">Đã sửa xong</span>
+                            </td>
+                            <td class="text-center">
+                                <form th:action="@{/admin/issues/status}" method="POST" class="d-flex gap-1.5 align-items-center justify-content-center">
+                                    <input type="hidden" name="issueId" th:value="${issue.id}">
+                                    <select name="status" class="form-select form-select-sm border bg-light" style="font-size: 13px;" onchange="this.form.submit()">
+                                        <option value="PENDING" th:selected="${issue.status == 'PENDING'}">Chờ xử lý</option>
+                                        <option value="PROCESSING" th:selected="${issue.status == 'PROCESSING'}">Đang sửa</option>
+                                        <option value="RESOLVED" th:selected="${issue.status == 'RESOLVED'}">Đã sửa xong</option>
+                                    </select>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

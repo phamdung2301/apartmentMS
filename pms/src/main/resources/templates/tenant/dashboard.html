@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cổng thông tin Khách Thuê | Mini-PMS</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts & Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/index.css}">
+    <!-- Chart.js for premium visuals -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Customize client panel theme */
+        :root {
+            --primary-color: #0f172a; /* Deep elegant slate for client panel */
+            --primary-hover: #1e293b;
+            --accent-orange: #fd5d14;
+            --accent-orange-hover: #e04b08;
+        }
+        .sidebar-logo .logo-icon {
+            background: var(--accent-orange);
+        }
+        .btn-pms {
+            background-color: var(--accent-orange);
+            box-shadow: 0 4px 12px rgba(253, 93, 20, 0.2);
+        }
+        .btn-pms:hover {
+            background-color: var(--accent-orange-hover);
+            box-shadow: 0 6px 16px rgba(253, 93, 20, 0.3);
+        }
+        .nav-item.active {
+            background-color: var(--primary-color);
+        }
+        .qr-image {
+            max-width: 250px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+        .bg-gradient-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            border-radius: var(--border-radius-lg);
+            padding: 32px;
+            margin-bottom: 32px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Layout -->
+    <div class="sidebar">
+        <div>
+            <div class="sidebar-logo">
+                <div class="logo-icon">M</div>
+                <div class="logo-text">
+                    <h5>Mini-PMS</h5>
+                    <span>Tenant Portal</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-nav">
+                <a th:href="@{/tenant/dashboard}" class="nav-item active">
+                    <i class="bi bi-grid-fill"></i> Portal cá nhân
+                </a>
+                <a href="#invoices-section" class="nav-item">
+                    <i class="bi bi-receipt-cutoff"></i> Hóa đơn của tôi
+                </a>
+                <a href="#issues-section" class="nav-item">
+                    <i class="bi bi-tools"></i> Báo cáo sự cố
+                </a>
+                <a href="#usage-section" class="nav-item">
+                    <i class="bi bi-activity"></i> Lịch sử tiêu thụ
+                </a>
+            </div>
+        </div>
+        
+        <div class="sidebar-footer">
+            <form th:action="@{/logout}" method="POST" id="logoutForm" class="d-none"></form>
+            <a href="javascript:document.getElementById('logoutForm').submit();" class="nav-item text-danger border-top pt-3 rounded-0">
+                <i class="bi bi-box-arrow-left"></i> Đăng xuất
+            </a>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="app-header">
+        <div class="search-bar">
+            <!-- Blank / Spacer for client panel -->
+        </div>
+        
+        <div class="header-actions">
+            <div class="notification-bell">
+                <i class="bi bi-bell"></i>
+                <div class="notification-badge"></div>
+            </div>
+            
+            <div class="user-profile">
+                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=100&q=80" alt="Avatar" class="user-avatar">
+                <div class="user-info">
+                    <h6 th:text="${tenant.fullName}">Nguyễn Văn A</h6>
+                    <span>Khách Thuê</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content animate-fade-in">
+        
+        <!-- Welcome Header -->
+        <div class="bg-gradient-header d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="fw-bold m-0" style="font-size: 26px;">Xin chào, <span th:text="${tenant.fullName}">Nguyễn Văn A</span>!</h1>
+                <p class="text-white-50 m-0 mt-1" th:if="${room != null}">
+                    Bạn đang thuê phòng <strong class="text-white" th:text="${room.roomNumber}">101</strong> | Ký hợp đồng ngày <span th:text="${contract.startDate}">2026-02-27</span>
+                </p>
+                <p class="text-white-50 m-0 mt-1" th:if="${room == null}">
+                    Hợp đồng của bạn hiện đang được khởi tạo hoặc đã kết thúc.
+                </p>
+            </div>
+            <div class="text-end" th:if="${room != null}">
+                <span class="badge bg-success px-3 py-2 rounded-pill fw-semibold" style="font-size: 13px;">Hợp đồng đang hoạt động</span>
+            </div>
+        </div>
+
+        <div th:if="${noActiveContract}" class="alert alert-warning p-4 rounded-3 text-center">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size: 32px; color: #eab308;"></i>
+            <h5 class="fw-bold mt-2">Chưa tìm thấy hợp đồng thuê đang hoạt động</h5>
+            <p class="m-0 text-secondary">Vui lòng liên hệ với chủ nhà (Admin) để thiết lập hợp đồng thuê và kích hoạt đầy đủ các chức năng tra cứu hóa đơn.</p>
+        </div>
+
+        <div th:if="${!noActiveContract}">
+            
+            <!-- Quick Room Details -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h5>Số phòng thuê</h5>
+                            <div class="stat-value text-primary" th:text="${room.roomNumber}">101</div>
+                            <span class="text-secondary" style="font-size: 13px;" th:text="${room.description}">Mô tả phòng</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h5>Tiền phòng hàng tháng</h5>
+                            <div class="stat-value" th:text="${#numbers.formatDecimal(room.price, 0, 'COMMA', 0, 'POINT')} + ' đ'">3,500,000 đ</div>
+                            <span class="text-secondary" style="font-size: 13px;">Chưa gồm điện nước</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h5>Tiền đặt cọc</h5>
+                            <div class="stat-value text-success" th:text="${#numbers.formatDecimal(contract.deposit, 0, 'COMMA', 0, 'POINT')} + ' đ'">3,500,000 đ</div>
+                            <span class="text-secondary" style="font-size: 13px;">Hoàn trả khi hết hạn HĐ</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h5>Thời hạn thuê</h5>
+                            <div class="fw-bold text-dark mt-1" style="font-size: 16px;">
+                                <i class="bi bi-calendar-event"></i> <span th:text="${contract.endDate}">2027-02-27</span>
+                            </div>
+                            <span class="text-secondary" style="font-size: 13px;">Ngày kết thúc dự kiến</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoices List Card -->
+            <div id="invoices-section" class="content-card mb-4">
+                <div class="card-title-area">
+                    <h4>Lịch sử hóa đơn cá nhân</h4>
+                    <p>Tra cứu chi tiết tiền phòng, điện nước và thực hiện thanh toán chuyển khoản qua VietQR</p>
+                </div>
+
+                <div th:if="${invoices.empty}" class="text-center py-5">
+                    <i class="bi bi-receipt text-secondary" style="font-size: 36px;"></i>
+                    <h6 class="fw-bold mt-2">Chưa có hóa đơn nào được phát hành!</h6>
+                    <p class="text-secondary" style="font-size: 13px;">Admin sẽ tính toán và chốt hóa đơn vào cuối kỳ.</p>
+                </div>
+
+                <div th:if="${!invoices.empty}" class="table-responsive">
+                    <table class="pms-table">
+                        <thead>
+                            <tr>
+                                <th>Kỳ Hóa Đơn</th>
+                                <th>Tổng Tiền</th>
+                                <th class="text-center">Trạng Thái</th>
+                                <th>Ngày Thanh Toán</th>
+                                <th class="text-center">Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="invoice : ${invoices}">
+                                <td class="fw-bold" th:text="'Tháng ' + ${invoice.month} + '/' + ${invoice.year}">Tháng 5/2026</td>
+                                <td class="fw-bold text-danger" th:text="${#numbers.formatDecimal(invoice.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VND'">3.850.000 VND</td>
+                                <td class="text-center">
+                                    <span th:if="${invoice.status == 'UNPAID'}" class="badge-unpaid">Chưa Thanh Toán</span>
+                                    <span th:if="${invoice.status == 'PAID'}" class="badge-paid">Đã Thanh Toán</span>
+                                </td>
+                                <td>
+                                    <span th:if="${invoice.paymentDate != null}" th:text="${#temporals.format(invoice.paymentDate, 'yyyy-MM-dd HH:mm')}">2026-05-27 19:30</span>
+                                    <span th:if="${invoice.paymentDate == null}" class="text-secondary">-</span>
+                                </td>
+                                <td class="text-center">
+                                    <button th:if="${invoice.status == 'UNPAID'}" 
+                                            th:onclick="'openPaymentModal(' + ${invoice.id} + ', ' + ${invoice.totalAmount} + ', ' + ${invoice.month} + ')'" 
+                                            class="btn btn-pms btn-pms-sm py-1.5 px-3">
+                                        <i class="bi bi-qr-code-scan"></i> Thanh toán
+                                    </button>
+                                    <span th:if="${invoice.status == 'PAID'}" class="text-success fw-semibold"><i class="bi bi-patch-check-fill"></i> Hoàn tất</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Two-column Layout: Report Issue & Consumption Chart -->
+            <div class="row g-4">
+                
+                <!-- Report Issue Section -->
+                <div class="col-md-6" id="issues-section">
+                    <div class="content-card h-100 mt-0">
+                        <div class="card-title-area">
+                            <h4>Báo Cáo Sự Cố & Hỏng Hóc</h4>
+                            <p>Gửi phiếu yêu cầu hỗ trợ sửa chữa các thiết bị trang bị trong phòng trọ</p>
+                        </div>
+
+                        <form th:action="@{/tenant/issues/report}" method="POST" class="mb-4">
+                            <div class="mb-3">
+                                <label for="issueDescription" class="form-label fw-semibold">Mô tả sự cố <span class="text-danger">*</span></label>
+                                <textarea class="form-control bg-light" id="issueDescription" name="description" rows="3" required placeholder="Ví dụ: Thiết bị điều hòa phòng 101 chảy nước, đèn hành lang bị cháy..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-pms w-100 py-2">Gửi phiếu báo cáo</button>
+                        </form>
+
+                        <h6 class="fw-bold mb-3">Lịch sử sự cố đã gửi</h6>
+                        <div th:if="${issues.empty}" class="text-center py-4 bg-light rounded-3">
+                            <span class="text-secondary" style="font-size: 13px;">Bạn chưa gửi báo cáo sự cố nào.</span>
+                        </div>
+                        <div th:if="${!issues.empty}" class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-sm" style="font-size: 13px;">
+                                <thead>
+                                    <tr>
+                                        <th>Ngày gửi</th>
+                                        <th>Nội dung</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="issue : ${issues}">
+                                        <td class="text-secondary font-monospace" th:text="${#temporals.format(issue.createdAt, 'MM-dd HH:mm')}">05-27 15:00</td>
+                                        <td th:text="${issue.description}">Hỏng điều hòa</td>
+                                        <td>
+                                            <span th:if="${issue.status == 'PENDING'}" class="badge bg-danger-subtle text-danger">Chờ duyệt</span>
+                                            <span th:if="${issue.status == 'PROCESSING'}" class="badge bg-warning-subtle text-warning">Đang xử lý</span>
+                                            <span th:if="${issue.status == 'RESOLVED'}" class="badge bg-success-subtle text-success">Đã sửa</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consumption Chart -->
+                <div class="col-md-6" id="usage-section">
+                    <div class="content-card h-100 mt-0">
+                        <div class="card-title-area">
+                            <h4>Biểu Đồ Tiêu Thụ Điện Nước</h4>
+                            <p>Lịch sử tiêu thụ điện và nước của phòng bạn qua các tháng</p>
+                        </div>
+                        <div style="height: 300px; position: relative;">
+                            <canvas id="consumptionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- VietQR Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 24px; overflow: hidden;">
+                <div class="modal-header border-0 bg-light p-4">
+                    <h5 class="modal-title fw-bold" id="paymentModalLabel">Thanh Toán Qua VietQR</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <p class="mb-3 text-secondary" style="font-size: 14px;">Quét mã VietQR động dưới đây để thanh toán tiền phòng nhanh chóng.</p>
+                    
+                    <!-- QR Display Frame -->
+                    <div class="d-flex justify-content-center mb-3">
+                        <div id="qr-loading" class="spinner-border text-orange my-5" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <img id="qr-code-img" src="" alt="VietQR Code" class="qr-image d-none">
+                    </div>
+
+                    <!-- Payment Text Details -->
+                    <div class="bg-light p-3 rounded-3 text-start mb-3" style="font-size: 13.5px;">
+                        <div class="mb-1"><strong>Ngân hàng thụ hưởng:</strong> <span id="payment-bank">MB Bank</span></div>
+                        <div class="mb-1"><strong>Số tài khoản:</strong> <span id="payment-account">0999999999</span></div>
+                        <div class="mb-1"><strong>Chủ tài khoản:</strong> <span id="payment-owner">NGUYEN VAN A</span></div>
+                        <div class="mb-1"><strong>Số tiền chuyển:</strong> <strong class="text-danger" id="payment-amount">0 đ</strong></div>
+                        <div><strong>Nội dung CK:</strong> <code class="text-orange fw-bold" id="payment-info">PHONG101_TIENPHONG_THANG5</code></div>
+                    </div>
+
+                    <button class="btn btn-pms w-100 py-2" id="btn-confirm-payment">
+                        <i class="bi bi-check-circle"></i> Tôi đã hoàn tất chuyển khoản
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        let currentInvoiceId = null;
+
+        // Open Payment Modal and retrieve dynamic QR code from API via AJAX
+        function openPaymentModal(invoiceId, amount, month) {
+            currentInvoiceId = invoiceId;
+            
+            const qrLoading = document.getElementById('qr-loading');
+            const qrImg = document.getElementById('qr-code-img');
+            const amountTxt = document.getElementById('payment-amount');
+            const infoTxt = document.getElementById('payment-info');
+            
+            qrLoading.classList.remove('d-none');
+            qrImg.classList.add('d-none');
+            
+            amountTxt.textContent = amount.toLocaleString('vi-VN') + ' đ';
+            infoTxt.textContent = `PHONG_THANG${month}_TIENPHONG`;
+
+            // Open Bootstrap Modal
+            const myModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            myModal.show();
+
+            // Fetch dynamic QR code url from endpoint
+            fetch(`/tenant/payment-qr/${invoiceId}`)
+                .then(res => res.text())
+                .then(url => {
+                    qrImg.src = url;
+                    qrImg.onload = () => {
+                        qrLoading.classList.add('d-none');
+                        qrImg.classList.remove('d-none');
+                    };
+                })
+                .catch(err => {
+                    console.error("Error generating QR:", err);
+                    qrLoading.classList.add('d-none');
+                    // Fallback URL if api fails
+                    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TIENPHONG_PHONG_THANG${month}`;
+                    qrImg.classList.remove('d-none');
+                });
+        }
+
+        // Mock payment confirmation endpoint via AJAX
+        document.getElementById('btn-confirm-payment').addEventListener('click', function() {
+            if (!currentInvoiceId) return;
+            
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status"></span> Đang xác nhận...`;
+
+            fetch(`/api/utility/pay-invoice/${currentInvoiceId}`, {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Xác nhận thanh toán thành công! Cảm ơn bạn.");
+                    window.location.reload();
+                } else {
+                    alert("Lỗi xác nhận: " + data.message);
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="bi bi-check-circle"></i> Tôi đã hoàn tất chuyển khoản`;
+                }
+            })
+            .catch(err => {
+                console.error("Payment Confirmation Error:", err);
+                alert("Lỗi kết nối máy chủ khi thực hiện xác nhận thanh toán.");
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-check-circle"></i> Tôi đã hoàn tất chuyển khoản`;
+            });
+        });
+
+        // Initialize consumption history chart using Chart.js
+        document.addEventListener('DOMContentLoaded', () => {
+            const ctx = document.getElementById('consumptionChart').getContext('2d');
+            
+            // Mock historical consumption data for visual premium chart
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Tháng 12', 'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5'],
+                    datasets: [
+                        {
+                            label: 'Điện tiêu thụ (kWh)',
+                            data: [150, 142, 160, 185, 172, 195],
+                            borderColor: '#fd5d14',
+                            backgroundColor: 'rgba(253, 93, 20, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Nước tiêu thụ (m³)',
+                            data: [18, 15, 20, 24, 22, 25],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    family: 'Outfit'
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                borderDash: [5, 5]
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

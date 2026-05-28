@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập | Mini-PMS</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts & Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/index.css}">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #fef5f0 0%, #fff7ed 100%);
+        }
+        .login-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            background: #ffffff;
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .login-header {
+            background-color: var(--primary-color);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        .login-body {
+            padding: 40px;
+        }
+        .quick-auth-btn {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            transition: all 0.2s;
+            text-align: left;
+            margin-bottom: 12px;
+        }
+        .quick-auth-btn:hover {
+            background-color: var(--primary-light);
+            border-color: var(--primary-color);
+        }
+        .quick-auth-btn i {
+            font-size: 20px;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="d-inline-flex align-items-center justify-content-center bg-white text-orange rounded-3 p-2 mb-2" style="width: 50px; height: 50px;">
+                    <i class="bi bi-house-door-fill" style="font-size: 24px; color: var(--primary-color);"></i>
+                </div>
+                <h4 class="fw-bold m-0">Mini-PMS</h4>
+                <p class="m-0 text-white-50" style="font-size: 13px;">Hệ thống Quản lý Phòng trọ Thông minh</p>
+            </div>
+            
+            <div class="login-body">
+                <h5 class="fw-bold mb-3 text-center">Đăng Nhập Hệ Thống</h5>
+                
+                <div th:if="${param.error}" class="alert alert-danger text-center py-2" role="alert" style="font-size: 14px; border-radius: 10px;">
+                    Tên đăng nhập hoặc mật khẩu không chính xác!
+                </div>
+                
+                <div th:if="${param.logout}" class="alert alert-success text-center py-2" role="alert" style="font-size: 14px; border-radius: 10px;">
+                    Đã đăng xuất thành công.
+                </div>
+
+                <form th:action="@{/login}" method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label fw-semibold" style="font-size: 14px;">Tên đăng nhập</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-secondary"></i></span>
+                            <input type="text" class="form-control border-start-0 bg-light" id="username" name="username" required placeholder="Nhập tên tài khoản">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-semibold" style="font-size: 14px;">Mật khẩu</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-secondary"></i></span>
+                            <input type="password" class="form-control border-start-0 bg-light" id="password" name="password" required placeholder="Nhập mật khẩu">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-pms w-100 py-2.5 mb-4">
+                        <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                    </button>
+                </form>
+
+                <div class="separator d-flex align-items-center text-center my-3 text-secondary" style="font-size: 13px;">
+                    <hr class="flex-grow-1">
+                    <span class="px-2">ĐĂNG NHẬP NHANH (DEMO)</span>
+                    <hr class="flex-grow-1">
+                </div>
+
+                <button class="quick-auth-btn" onclick="fillCredentials('admin', 'admin')">
+                    <div class="bg-white rounded-3 p-1 text-center"><i class="bi bi-person-workspace"></i></div>
+                    <div>
+                        <div class="fw-bold text-dark" style="font-size: 14px;">Tài khoản Chủ Trọ (Admin)</div>
+                        <div class="text-secondary" style="font-size: 12px;">Tài khoản: admin / Mật khẩu: admin</div>
+                    </div>
+                </button>
+
+                <button class="quick-auth-btn" onclick="fillCredentials('tenant1', '123456')">
+                    <div class="bg-white rounded-3 p-1 text-center"><i class="bi bi-people-fill"></i></div>
+                    <div>
+                        <div class="fw-bold text-dark" style="font-size: 14px;">Tài khoản Khách Thuê (Tenant)</div>
+                        <div class="text-secondary" style="font-size: 12px;">Tài khoản: tenant1 / Mật khẩu: 123456</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function fillCredentials(user, pass) {
+            document.getElementById('username').value = user;
+            document.getElementById('password').value = pass;
+        }
+    </script>
+</body>
+</html>

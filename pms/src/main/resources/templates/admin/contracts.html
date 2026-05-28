@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hợp đồng thuê phòng | Mini-PMS Admin</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts & Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/index.css}">
+</head>
+<body>
+
+    <!-- Sidebar Layout -->
+    <div class="sidebar">
+        <div>
+            <div class="sidebar-logo">
+                <div class="logo-icon">M</div>
+                <div class="logo-text">
+                    <h5>Mini-PMS</h5>
+                    <span>Admin Panel</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-nav">
+                <a th:href="@{/admin/dashboard}" class="nav-item">
+                    <i class="bi bi-grid-fill"></i> Dashboard
+                </a>
+                <a th:href="@{/admin/rooms}" class="nav-item">
+                    <i class="bi bi-house-door"></i> Room Management
+                </a>
+                <a th:href="@{/admin/contracts}" class="nav-item active">
+                    <i class="bi bi-file-earmark-text"></i> Invoice Generation
+                </a>
+                <a th:href="@{/admin/issues}" class="nav-item">
+                    <i class="bi bi-exclamation-circle"></i> Issue Reports
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="bi bi-gear"></i> Settings
+                </a>
+            </div>
+        </div>
+        
+        <div class="sidebar-footer">
+            <div class="help-box mb-3">
+                <p class="m-0 text-secondary">Need Help?</p>
+                <p class="mb-3" style="font-size: 11px;">Contact our tech support team.</p>
+                <a href="mailto:support@minipms.com" class="btn btn-pms w-100 btn-sm py-2">Contact Support</a>
+            </div>
+            <form th:action="@{/logout}" method="POST" id="logoutForm" class="d-none"></form>
+            <a href="javascript:document.getElementById('logoutForm').submit();" class="nav-item text-danger border-top pt-3 rounded-0">
+                <i class="bi bi-box-arrow-left"></i> Đăng xuất
+            </a>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="app-header">
+        <form th:action="@{/admin/contracts}" method="GET" class="search-bar">
+            <i class="bi bi-search"></i>
+            <input type="text" name="search" th:value="${searchQuery}" placeholder="Tìm kiếm khách thuê...">
+        </form>
+        
+        <div class="header-actions">
+            <div class="notification-bell">
+                <i class="bi bi-bell"></i>
+                <div class="notification-badge"></div>
+            </div>
+            
+            <div class="user-profile">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Avatar" class="user-avatar">
+                <div class="user-info">
+                    <h6>Admin User</h6>
+                    <span>Manager</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="fw-bold m-0" style="font-size: 28px;">Quản lý Hợp Đồng & Khách Thuê</h1>
+                <p class="text-secondary m-0">Lập hợp đồng thuê mới, kết thúc hợp đồng và kích hoạt tài khoản khách thuê</p>
+            </div>
+            
+            <button class="btn btn-pms" data-bs-toggle="modal" data-bs-target="#createContractModal">
+                <i class="bi bi-file-earmark-plus"></i> Lập hợp đồng mới
+            </button>
+        </div>
+
+        <!-- Contracts List Card -->
+        <div class="content-card">
+            <div class="card-title-area">
+                <h4>Danh Sách Hợp Đồng Thuê</h4>
+                <p th:if="${searchQuery == null || searchQuery.empty}">Thông tin chi tiết các hợp đồng hiện hành và thời hạn tương ứng</p>
+                <p th:if="${searchQuery != null && !searchQuery.empty}">
+                    Kết quả tìm kiếm cho: "<strong class="text-orange" th:text="${searchQuery}"></strong>"
+                    <a th:href="@{/admin/contracts}" class="badge bg-secondary ms-2 text-decoration-none"><i class="bi-x-circle-fill"></i> Xóa lọc</a>
+                </p>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="pms-table">
+                    <thead>
+                        <tr>
+                            <th>Phòng</th>
+                            <th>Khách Thuê</th>
+                            <th>Liên Hệ (SĐT / Email)</th>
+                            <th>Kỳ Hạn Thuê</th>
+                            <th>Đặt Cọc</th>
+                            <th class="text-center">Trạng Thái</th>
+                            <th class="text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="contract : ${contracts}">
+                            <td class="fw-bold" th:text="${contract.room.roomNumber}">101</td>
+                            <td class="fw-semibold text-dark" th:text="${contract.tenant.fullName}">Nguyễn Văn A</td>
+                            <td>
+                                <div style="font-size: 13px; color: #475569;" th:text="${contract.tenant.phone}">0912345678</div>
+                                <div style="font-size: 12px; color: #64748b;" th:text="${contract.tenant.email}">tenant1@gmail.com</div>
+                            </td>
+                            <td>
+                                <span th:text="${contract.startDate} + ' -> ' + ${contract.endDate}">2026-02-27 -> 2027-02-27</span>
+                            </td>
+                            <td th:text="${#numbers.formatDecimal(contract.deposit, 0, 'COMMA', 0, 'POINT')} + ' đ'">3.500.000 đ</td>
+                            <td class="text-center">
+                                <span th:if="${contract.status == 'ACTIVE'}" class="badge-paid">Hiệu lực</span>
+                                <span th:if="${contract.status == 'EXPIRED'}" class="badge-unpaid">Hết hạn</span>
+                            </td>
+                            <td class="text-center">
+                                <a th:if="${contract.status == 'ACTIVE'}" 
+                                   th:href="@{/admin/contracts/terminate/{id}(id=${contract.id})}" 
+                                   class="btn btn-pms-outline text-danger btn-pms-sm py-1 px-2"
+                                   onclick="return confirm('Bạn có chắc chắn muốn kết thúc hợp đồng này? Phòng sẽ chuyển sang trạng thái TRỐNG.');">
+                                    <i class="bi bi-x-circle"></i> Kết thúc
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Contract Modal -->
+    <div class="modal fade" id="createContractModal" tabindex="-1" aria-labelledby="createContractModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="border-radius: 20px; overflow: hidden;">
+                <form th:action="@{/admin/contracts/create}" method="POST">
+                    <div class="modal-header border-0 bg-light p-4">
+                        <h5 class="modal-title fw-bold" id="createContractModalLabel">Lập Hợp Đồng Thuê Mới</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <!-- Room selector -->
+                            <div class="col-md-6">
+                                <label for="roomId" class="form-label fw-semibold">Chọn phòng thuê <span class="text-danger">*</span></label>
+                                <select class="form-select bg-light" id="roomId" name="roomId" required>
+                                    <option value="" disabled selected>-- Chọn phòng trọ --</option>
+                                    <option th:each="room : ${rooms}" 
+                                            th:value="${room.id}" 
+                                            th:text="'Phòng ' + ${room.roomNumber} + ' (' + ${#numbers.formatDecimal(room.price, 0, 'COMMA', 0, 'POINT')} + ' đ - ' + ${room.status} + ')'"></option>
+                                </select>
+                            </div>
+                            
+                            <!-- Tenant Name -->
+                            <div class="col-md-6">
+                                <label for="tenantName" class="form-label fw-semibold">Họ tên khách thuê <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control bg-light" id="tenantName" name="tenantName" required placeholder="Nhập họ và tên đầy đủ">
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label for="tenantEmail" class="form-label fw-semibold">Email liên hệ <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control bg-light" id="tenantEmail" name="tenantEmail" required placeholder="Email để nhận hóa đơn">
+                                <span class="text-secondary" style="font-size: 11px;">Hệ thống sẽ tự động tạo tài khoản với email này</span>
+                            </div>
+
+                            <!-- Phone -->
+                            <div class="col-md-6">
+                                <label for="tenantPhone" class="form-label fw-semibold">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control bg-light" id="tenantPhone" name="tenantPhone" required placeholder="SĐT liên hệ chính thức">
+                            </div>
+
+                            <!-- Start Date -->
+                            <div class="col-md-4">
+                                <label for="startDate" class="form-label fw-semibold">Ngày bắt đầu <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control bg-light" id="startDate" name="startDate" required>
+                            </div>
+
+                            <!-- End Date -->
+                            <div class="col-md-4">
+                                <label for="endDate" class="form-label fw-semibold">Ngày hết hạn <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control bg-light" id="endDate" name="endDate" required>
+                            </div>
+
+                            <!-- Deposit -->
+                            <div class="col-md-4">
+                                <label for="deposit" class="form-label fw-semibold">Tiền đặt cọc (VND) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control bg-light" id="deposit" name="deposit" required placeholder="Ví dụ: 3500000">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4">
+                        <button type="button" class="btn btn-pms-outline" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-pms">Tạo hợp đồng</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Set default dates for the contract form (start is today, end is 1 year from now)
+        document.addEventListener("DOMContentLoaded", function() {
+            const today = new Date();
+            const startInput = document.getElementById('startDate');
+            const endInput = document.getElementById('endDate');
+            
+            startInput.value = today.toISOString().split('T')[0];
+            
+            const nextYear = new Date(today.setFullYear(today.getFullYear() + 1));
+            endInput.value = nextYear.toISOString().split('T')[0];
+        });
+    </script>
+</body>
+</html>
