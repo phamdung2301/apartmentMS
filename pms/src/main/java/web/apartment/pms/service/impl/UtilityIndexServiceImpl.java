@@ -9,6 +9,7 @@ import web.apartment.pms.repository.UtilityIndexRepository;
 import web.apartment.pms.service.UtilityIndexService;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -31,6 +32,11 @@ public class UtilityIndexServiceImpl implements UtilityIndexService {
     @Override
     public Optional<UtilityIndex> findByRoomIdAndMonthAndYear(Long roomId, Integer month, Integer year) {
         return utilityIndexRepository.findByRoomIdAndMonthAndYear(roomId, month, year);
+    }
+
+    @Override
+    public List<UtilityIndex> findHistoryByRoomId(Long roomId) {
+        return utilityIndexRepository.findByRoomIdOrderByYearAscMonthAsc(roomId);
     }
 
     @Override

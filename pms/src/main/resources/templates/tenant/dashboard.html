@@ -402,19 +402,34 @@
             });
         });
 
-        // Initialize consumption history chart using Chart.js
+        // Initialize consumption history chart using Chart.js with REAL data from DB
         document.addEventListener('DOMContentLoaded', () => {
+            // Dữ liệu thật từ bảng utility_indices (controller đổ vào model attribute "utilityHistory")
+            const chartLabels = [];
+            const elecData = [];
+            const waterData = [];
+            /*[# th:each="u : ${utilityHistory}"]*/
+            chartLabels.push('T' + /*[[${u.month}]]*/ 0 + '/' + /*[[${u.year}]]*/ 0);
+            elecData.push(/*[[${u.newElec - u.oldElec}]]*/ 0);
+            waterData.push(/*[[${u.newWater - u.oldWater}]]*/ 0);
+            /*[/]*/
+
+            if (chartLabels.length === 0) {
+                document.getElementById('consumptionChart').outerHTML =
+                    '<div class="text-center text-secondary py-5" style="font-size:13px;">Chưa có dữ liệu tiêu thụ.<br>Admin sẽ nhập chỉ số điện nước hàng tháng.</div>';
+                return;
+            }
+
             const ctx = document.getElementById('consumptionChart').getContext('2d');
-            
-            // Mock historical consumption data for visual premium chart
+
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['Tháng 12', 'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5'],
+                    labels: chartLabels,
                     datasets: [
                         {
                             label: 'Điện tiêu thụ (kWh)',
-                            data: [150, 142, 160, 185, 172, 195],
+                            data: elecData,
                             borderColor: '#fd5d14',
                             backgroundColor: 'rgba(253, 93, 20, 0.1)',
                             borderWidth: 3,
@@ -423,7 +438,7 @@
                         },
                         {
                             label: 'Nước tiêu thụ (m³)',
-                            data: [18, 15, 20, 24, 22, 25],
+                            data: waterData,
                             borderColor: '#3b82f6',
                             backgroundColor: 'rgba(59, 130, 246, 0.1)',
                             borderWidth: 3,

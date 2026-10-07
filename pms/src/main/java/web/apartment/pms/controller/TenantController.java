@@ -12,6 +12,7 @@ import web.apartment.pms.service.ContractService;
 import web.apartment.pms.service.InvoiceService;
 import web.apartment.pms.service.IssueReportService;
 import web.apartment.pms.service.RoomService;
+import web.apartment.pms.service.UtilityIndexService;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +27,7 @@ public class TenantController {
     private final ContractService contractService;
     private final InvoiceService invoiceService;
     private final IssueReportService issueReportService;
+    private final UtilityIndexService utilityIndexService;
     
     @Value("${pms.vietqr.bank-id:MB}")
     private String bankId;
@@ -39,11 +41,13 @@ public class TenantController {
     public TenantController(UserRepository userRepository,
                             ContractService contractService,
                             InvoiceService invoiceService,
-                            IssueReportService issueReportService) {
+                            IssueReportService issueReportService,
+                            UtilityIndexService utilityIndexService) {
         this.userRepository = userRepository;
         this.contractService = contractService;
         this.invoiceService = invoiceService;
         this.issueReportService = issueReportService;
+        this.utilityIndexService = utilityIndexService;
     }
 
     private User getLoggedInUser() {
@@ -73,6 +77,11 @@ public class TenantController {
             // Fetch Issue Reports
             List<IssueReport> issues = issueReportService.findByTenantId(tenant.getId());
             model.addAttribute("issues", issues);
+
+            // Fetch real utility consumption history for the chart
+            List<UtilityIndex> utilityHistory = utilityIndexService.findHistoryByRoomId(room.getId());
+            model.addAttribute("utilityHistory", utilityHistory);
+
             model.addAttribute("noActiveContract", false);
         } else {
             model.addAttribute("noActiveContract", true);
